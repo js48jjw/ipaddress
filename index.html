@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My IP Address</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- navbar 추가 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <h2 class="nav-logo">IP Checker</h2>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link" id="home-link">홈</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" id="info-link">정보</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" id="theme-toggle">테마 밝음</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    
+    <!-- 홈 화면 -->
+    <div class="container" id="home-container">
+        <h1>IP Address</h1>
+        <div class="ip-container">
+            <div class="ip-box">
+                <h2>공인 IP 주소</h2>
+                <div class="ip-content">
+                    <p id="public-ip">불러오는 중...</p>
+                    <button class="copy-btn" data-target="public-ip">복사</button>
+                </div>
+            </div>
+            <div class="ip-box">
+                <h2>사설 IP 주소</h2>
+                <div class="ip-content">
+                    <p id="private-ip">불러오는 중...</p>
+                    <button class="copy-btn" data-target="private-ip">복사</button>
+                </div>
+            </div>
+        </div>
+        <button id="refresh-btn">새로고침</button>
+    </div>
+    
+    <!-- 정보 화면 -->
+    <div class="container" id="info-container" style="display: none;">
+        <h1>웹사이트 정보</h1>
+        <div class="info-content">
+            <p>이 웹사이트는 사용자의 공인 IP 주소와 사설 IP 주소를 확인할 수 있는 도구입니다.</p>
+            
+            <h2>기능 설명</h2>
+            <ul>
+                <li><strong>공인 IP 주소</strong>: 인터넷에서 사용되는 고유한 주소로, 외부에서 사용자를 식별하는 데 사용됩니다.</li>
+                <li><strong>사설 IP 주소</strong>: 로컬 네트워크 내에서 사용되는 주소로, 라우터 내부에서만 유효합니다.</li>
+                <li><strong>새로고침 버튼</strong>: IP 주소 정보를 다시 가져옵니다.</li>
+            </ul>
+            
+            <h2>기술 정보</h2>
+            <ul>
+                <li>공인 IP 주소는 ipify.org API를 통해 가져옵니다.</li>
+                <li>사설 IP 주소는 WebRTC 기술을 사용하여 로컬 네트워크 정보를 감지합니다.</li>
+                <li>배경 이미지는 Picsum Photos에서 제공되며, 매일 오전 6시에 변경됩니다.</li>
+            </ul>
+            
+            <h2>사용 방법</h2>
+            <ol>
+                <li>홈 화면에서 현재 IP 주소를 확인할 수 있습니다.</li>
+                <li>IP 주소가 변경되었을 경우 "새로고침" 버튼을 클릭하여 최신 정보를 가져올 수 있습니다.</li>
+                <li>"정보" 탭에서 웹사이트의 기능과 사용 방법을 확인할 수 있습니다.</li>
+            </ol>
+        </div>
+        <button id="back-to-home">홈으로 돌아가기</button>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

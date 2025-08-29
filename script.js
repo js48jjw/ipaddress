@@ -89,8 +89,8 @@ function getIPAddresses() {
     // 공인 IP 주소 가져오기
     getPublicIP();
     
-    // 사설 IP 주소 가져오기
-    getPrivateIP();
+    // 위치 정보 가져오기
+    getLocationInfo();
 }
 
 // 공인 IP 주소 가져오기
@@ -119,10 +119,16 @@ function getPrivateIP() {
     privateIPElement.textContent = '불러오는 중...';
     privateIPElement.className = 'loading';
     
+    // 발견된 IP 주소를 저장할 배열
+    const foundIPs = [];
+    
     // WebRTC를 사용하여 사설 IP 주소 가져오기 (대체 방식 포함)
     try {
         const pc = new RTCPeerConnection({
-            iceServers: []
+            iceServers: [
+                { urls: "stun:stun.services.mozilla.com" },
+                { urls: "stun:stun.l.google.com:19302" }
+            ]
         });
         
         pc.createDataChannel('');
@@ -132,12 +138,20 @@ function getPrivateIP() {
             
             const myIP = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate)[1];
             
-            if (isPrivateIP(myIP)) {
-                privateIPElement.textContent = myIP;
-                privateIPElement.className = '';
+            // IP 주소가 이미 발견된 목록에 없고, 사설 IP인지 확인
+            if (myIP && !foundIPs.includes(myIP) && isPrivateIP(myIP)) {
+                foundIPs.push(myIP);
+                // 192.168.x.x 또는 10.x.x.x 대역의 IP를 우선적으로 표시
+                if ((myIP.startsWith('192.168.') || myIP.startsWith('10.')) && myIP !== '127.0.0.1') {
+                    privateIPElement.textContent = myIP;
+                    privateIPElement.className = '';
+                }
+                // 아직 IP 주소가 설정되지 않았다면 첫 번째 발견된 IP 주소로 설정
+                else if (privateIPElement.textContent === '불러오는 중...') {
+                    privateIPElement.textContent = myIP;
+                    privateIPElement.className = '';
+                }
             }
-            
-            pc.close();
         };
         
         pc.createOffer()
@@ -153,7 +167,7 @@ function getPrivateIP() {
             if (privateIPElement.textContent === '불러오는 중...') {
                 getPrivateIPFallback(privateIPElement);
             }
-        }, 3000);
+        }, 5000);
     } catch (error) {
         console.error('WebRTC 초기화 오류:', error);
         // 대체 방식 사용
@@ -166,6 +180,59 @@ function getPrivateIPFallback(element) {
     try {
         // 내부 IP 주소를 가져오기 위한 대체 방법
         const pc = new (window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection)({
+            iceServers: [
+                { urls: "stun:stun.services.mozilla.com" },
+                { urls: "stun:stun.l.google.com:19302" }
+            ]
+        });
+        
+        if (!pc) {
+            throw new Error('RTCPeerConnection not supported');
+        }
+        
+        const foundIPs = [];
+        
+        pc.createDataChannel('');
+        pc.onicecandidate = function(ice) {
+            if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+            const myIP = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate)[1];
+            
+            // IP 주소가 이미 발견된 목록에 없고, 사설 IP인지 확인
+            if (myIP && !foundIPs.includes(myIP) && isPrivateIP(myIP)) {
+                foundIPs.push(myIP);
+                // 192.168.x.x 또는 10.x.x.x 대역의 IP를 우선적으로 표시
+                if ((myIP.startsWith('192.168.') || myIP.startsWith('10.')) && myIP !== '127.0.0.1') {
+                    element.textContent = myIP;
+                    element.className = '';
+                }
+                // 아직 IP 주소가 설정되지 않았다면 첫 번째 발견된 IP 주소로 설정
+                else if (element.textContent === '불러오는 중...') {
+                    element.textContent = myIP;
+                    element.className = '';
+                }
+                pc.close();
+            }
+        };
+        pc.createOffer().then(offer => pc.setLocalDescription(offer));
+        
+        // 여전히 실패하면 네트워크 인터페이스 정보 표시
+        setTimeout(() => {
+            if (element.textContent === '불러오는 중...') {
+                // STUN 서버를 사용하지 않는 방식으로 다시 시도
+                getPrivateIPWithoutStun(element);
+            }
+        }, 3000);
+    } catch (error) {
+        console.error('대체 방식 오류:', error);
+        // 네트워크 정보 표시 방식으로 대체
+        showNetworkInfo(element);
+    }
+}
+
+// STUN 서버를 사용하지 않는 방식으로 사설 IP 가져오기
+function getPrivateIPWithoutStun(element) {
+    try {
+        const pc = new (window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection)({
             iceServers: []
         });
         
@@ -173,28 +240,69 @@ function getPrivateIPFallback(element) {
             throw new Error('RTCPeerConnection not supported');
         }
         
+        const foundIPs = [];
+        
         pc.createDataChannel('');
         pc.onicecandidate = function(ice) {
             if (!ice || !ice.candidate || !ice.candidate.candidate) return;
             const myIP = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate)[1];
-            if (myIP && isPrivateIP(myIP)) {
-                element.textContent = myIP;
-                element.className = '';
+            
+            // IP 주소가 이미 발견된 목록에 없고, 사설 IP인지 확인
+            if (myIP && !foundIPs.includes(myIP) && isPrivateIP(myIP)) {
+                foundIPs.push(myIP);
+                // 192.168.x.x 또는 10.x.x.x 대역의 IP를 우선적으로 표시
+                if ((myIP.startsWith('192.168.') || myIP.startsWith('10.')) && myIP !== '127.0.0.1') {
+                    element.textContent = myIP;
+                    element.className = '';
+                }
+                // 아직 IP 주소가 설정되지 않았다면 첫 번째 발견된 IP 주소로 설정
+                else if (element.textContent === '불러오는 중...') {
+                    element.textContent = myIP;
+                    element.className = '';
+                }
                 pc.close();
             }
         };
         pc.createOffer().then(offer => pc.setLocalDescription(offer));
         
-        // 여전히 실패하면 로컬 주소 표시
+        // 여전히 실패하면 네트워크 정보 표시
         setTimeout(() => {
             if (element.textContent === '불러오는 중...') {
-                element.textContent = '127.0.0.1 (local)';
-                element.className = '';
+                showNetworkInfo(element);
             }
         }, 2000);
     } catch (error) {
-        console.error('대체 방식 오류:', error);
-        element.textContent = '알 수 없음';
+        console.error('STUN 없는 방식 오류:', error);
+        showNetworkInfo(element);
+    }
+}
+
+// 네트워크 정보를 표시하는 함수
+function showNetworkInfo(element) {
+    try {
+        // 브라우저에서 제공하는 네트워크 정보 API 사용 (실험적 기능)
+        if (navigator.connection) {
+            const connection = navigator.connection;
+            let info = '네트워크 정보: ';
+            
+            if (connection.effectiveType) {
+                info += connection.effectiveType + ' ';
+            }
+            
+            if (connection.downlink) {
+                info += connection.downlink + 'Mbps ';
+            }
+            
+            element.textContent = info;
+            element.className = 'info';
+        } else {
+            // 모든 시도가 실패한 경우
+            element.textContent = '사설 IP를 찾을 수 없음';
+            element.className = 'error';
+        }
+    } catch (error) {
+        console.error('네트워크 정보 표시 오류:', error);
+        element.textContent = '사설 IP를 찾을 수 없음';
         element.className = 'error';
     }
 }
@@ -341,4 +449,38 @@ function loadBackgroundImage() {
     };
     
     img.src = imageUrl;
+}
+
+// 위치 정보 가져오기
+function getLocationInfo() {
+    const locationElement = document.getElementById('location-info');
+    locationElement.textContent = '불러오는 중...';
+    locationElement.className = 'loading';
+    
+    // IP 주소를 기반으로 위치 정보 가져오기
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            // IP 주소를 사용하여 위치 정보 가져오기
+            return fetch(`https://ipapi.co/${data.ip}/json/`);
+        })
+        .then(response => response.json())
+        .then(data => {
+            // 위치 정보 표시
+            if (data.city && data.region && data.country_name) {
+                locationElement.textContent = `${data.city}, ${data.region}, ${data.country_name}`;
+                locationElement.className = '';
+            } else if (data.country_name) {
+                locationElement.textContent = data.country_name;
+                locationElement.className = '';
+            } else {
+                locationElement.textContent = '위치 정보를 찾을 수 없음';
+                locationElement.className = 'error';
+            }
+        })
+        .catch(error => {
+            console.error('위치 정보를 가져오는 중 오류 발생:', error);
+            locationElement.textContent = '위치 정보를 찾을 수 없음';
+            locationElement.className = 'error';
+        });
 }

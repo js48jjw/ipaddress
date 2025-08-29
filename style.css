@@ -214,6 +214,17 @@ body.dark-theme .ip-box p {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+/* 위치 정보 스타일 */
+#location-info {
+    font-size: 1.5rem !important;
+    text-align: center;
+}
+
+/* 어두운 테마 위치 정보 */
+body.dark-theme #location-info {
+    color: #e2e8f0;
+}
+
 /* IP 주소와 복사 버튼을 위한 컨테이너 */
 .ip-content {
     display: flex;
@@ -378,6 +389,12 @@ body.dark-theme .info-content li {
         text-overflow: ellipsis;
         /* 모바일에서는 여백을 조금 줄임 */
         padding: 0 1rem;
+    }
+    
+    /* 모바일에서 위치 정보 스타일 */
+    #location-info {
+        font-size: 1.2rem !important;
+        text-align: center;
     }
     
     .nav-container {

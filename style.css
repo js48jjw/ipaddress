@@ -372,6 +372,45 @@ body.dark-theme .info-content li {
     color: #cbd5e0;
 }
 
+/* 홍보 배너 스타일 */
+.promo-banner {
+    position: fixed;
+    width: 160px;
+    z-index: 998;
+    top: 700px; /* 카카오 광고 밑에 위치 */
+    transition: all 0.3s ease;
+}
+
+.left-banner {
+    left: 10px;
+}
+
+.right-banner {
+    right: 16px;
+}
+
+.banner-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.banner-image:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* 어두운 테마에서 배너 스타일 */
+body.dark-theme .banner-image {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-theme .banner-image:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
 @media (max-width: 700px) {
     .container {
         padding: 1.5rem;
@@ -435,5 +474,10 @@ body.dark-theme .info-content li {
         font-size: 0.9rem;
         padding: 0.4rem 0.8rem;
         min-width: 50px;
+    }
+    
+    /* 모바일에서 홍보 배너 숨기기 */
+    .promo-banner {
+        display: none;
     }
 }
